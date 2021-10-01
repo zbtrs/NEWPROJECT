@@ -1,0 +1,3 @@
+module NETWORKPROJECT
+
+go 1.17
