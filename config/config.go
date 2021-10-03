@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 )
 
@@ -29,6 +28,5 @@ func Solve() ([]JsonConf, error) {
 	if err != nil {
 		return []JsonConf{}, err
 	}
-	fmt.Println(Res[0].Port, Res[0].ServerName, Res[1].Port, Res[1].ServerName, Res[0].Rules[0].Host)
 	return Res, nil
 }
