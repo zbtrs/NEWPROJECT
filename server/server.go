@@ -88,7 +88,8 @@ func (s *Server) matchURL(conn net.Conn) {
 }
 
 func (s *Server) Solve() {
-	Sta, err := net.Listen("tcp", ":8080")
+	//fmt.Println("check",":"+string(s.config.Port))
+	Sta, err := net.Listen("tcp", ":"+s.config.Port)
 	if err != nil {
 		fmt.Println("listen error!", err)
 		return
