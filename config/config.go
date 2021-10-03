@@ -7,6 +7,7 @@ import (
 
 type Rule struct {
 	Location       string `json:"location"`
+	MatchLocation  string `json:"matchLocation"`
 	ProxySetHeader string `json:"proxy_set_header"`
 	ProxyPass      string `json:"proxy_pass"`
 	Root           string `json:"root"`

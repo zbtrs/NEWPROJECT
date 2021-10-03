@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 )
 
@@ -64,6 +65,7 @@ func Modify(sta Request, r config.Rule) Request {
 	a := make([]string, 0)
 	a = append(a, s[1])
 	sta.Headers[s[0]] = a
+	sta.Url = r.Location
 	return sta
 }
 
@@ -155,4 +157,45 @@ func GetFirstLine(text string) string {
 		s2 = append(s2, s1[i])
 	}
 	return string(s2) + "\n"
+}
+
+func MarchLeft(s1 string, s2 string) bool {
+	b1, b2 := []byte(s1), []byte(s2)
+	if len(b2) == 0 || b2[0] != '*' || len(b1) < len(b2)-1 {
+		return false
+	}
+	for i, j := len(b1)-1, len(b2)-1; j > 0; {
+		if b1[i] != b2[j] {
+			return false
+		}
+		i--
+		j--
+	}
+	return true
+}
+
+func MarchRight(s1 string, s2 string) bool {
+	b1, b2 := []byte(s1), []byte(s2)
+	//fmt.Println("check2 ",s1,s2,b1,b2,len(b1),len(b2),b2[len(b2) - 1] == '*')
+	if len(b2) == 0 || b2[len(b2)-1] != '*' || len(b1) < len(b2)-1 {
+		//fmt.Println("check3")
+		return false
+	}
+	for i, j := 0, 0; j < len(b2)-1; {
+		if b1[i] != b2[j] {
+			return false
+		}
+		i++
+		j++
+	}
+	return true
+}
+
+func MarchRE(s1 string, s2 string) bool {
+	if s2 == "/" {
+		return false
+	} //特殊符号问题,根本不可能用到正则匹配
+	//fmt.Println("MarchRe ",s1,s2)
+	flag, _ := regexp.MatchString(s2, s1)
+	return flag
 }

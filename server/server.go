@@ -54,6 +54,25 @@ func (s *Server) SentResponse(responseText string, conn net.Conn) {
 	}
 }
 
+func Response404(conn net.Conn) {
+	//fmt.Println("check404")
+	s := "HTTP/1.1 404 Not Found\r\n"
+	s += "\r\n"
+	_, _ = conn.Write([]byte(s))
+}
+
+func (s *Server) LinkSolve(sta Request, conn net.Conn, v config.Rule) {
+	//fmt.Println("LinkCheck",v.MatchLocation,v.Location)
+	sta = Modify(sta, v)
+	statext := Http2String(sta)
+	responseText := s.SentMessage(statext, v)
+	if CheckNot200(responseText) {
+		AddErrorLog(ErrorLogLocation, fmt.Errorf(GetFirstLine(responseText)))
+	}
+	s.SentResponse(responseText, conn)
+	AddAccessLog(sta, s.config.AccessLog, responseText)
+}
+
 func (s *Server) matchURL(conn net.Conn) {
 	defer conn.Close()
 	sta, err := Analyse(conn)
@@ -62,23 +81,60 @@ func (s *Server) matchURL(conn net.Conn) {
 		fmt.Println("Analyse err: ", err)
 		return
 	}
+	//fmt.Println("check ",sta.Url)
+	var flag bool = false //是否有匹配上
 	for _, v := range s.config.Rules {
-		if CheckStatic(sta.Url, v.Location) == true {
-			//处理静态页面
+		if CheckStatic(sta.Url, v.MatchLocation) == true { //静态文件服务
 			tempText := GetStatic(sta, v)
 			responseText, _ := os.ReadFile(tempText)
 			responseText2 := GetResponse(responseText)
 			s.SentResponse(responseText2, conn)
-		} else if sta.Url == v.Location { //TODO other match rules
-			sta = Modify(sta, v)
-			statext := Http2String(sta)
-			responseText := s.SentMessage(statext, v)
-			if CheckNot200(responseText) {
-				AddErrorLog(ErrorLogLocation, fmt.Errorf(GetFirstLine(responseText)))
-			}
-			s.SentResponse(responseText, conn)
-			AddAccessLog(sta, s.config.AccessLog, responseText)
+			flag = true
+			break
+		} else if sta.Url == v.MatchLocation { //TODO other match rules
+			s.LinkSolve(sta, conn, v)
+			flag = true
+			break
 		}
+	}
+	//fmt.Println("check1 ",flag)
+	if flag {
+		return
+	}
+	for _, v := range s.config.Rules { //左通配符匹配
+		if MarchLeft(sta.Url, v.MatchLocation) {
+			s.LinkSolve(sta, conn, v)
+			flag = true
+			break
+		}
+	}
+	//fmt.Println("check2 ",flag)
+	if flag {
+		return
+	}
+	for _, v := range s.config.Rules {
+		if MarchRight(sta.Url, v.MatchLocation) {
+			//fmt.Println("sb! ",sta.Url,v.MatchLocation,v.Location)
+			s.LinkSolve(sta, conn, v)
+			flag = true
+			break
+		}
+	}
+	//fmt.Println("check3 ",flag)
+	if flag {
+		return
+	}
+	for _, v := range s.config.Rules {
+		if MarchRE(sta.Url, v.MatchLocation) {
+			s.LinkSolve(sta, conn, v)
+			flag = true
+			break
+		}
+	}
+	if flag == false {
+		Response404(conn)
+		AddErrorLog(ErrorLogLocation, fmt.Errorf("Can't March URL"))
+		return
 	}
 }
 

@@ -6,14 +6,40 @@
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
     "rules": [
       {
+        "matchLocation": "/",
         "location": "/",
         "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
       },
       {
+        "matchLocation": "/static",
         "location": "/static",
         "root": "D:\\webserver",
         "index": "a.html"
+      },
+      {
+        "matchLocation": "/ranklist.php",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "/[rR][aA][nN][kK][lL][iI][sS][tT].php",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "/rank*",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "*list.php",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
       }
     ]
   },
@@ -24,14 +50,28 @@
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\access_log.log",
     "rules": [
       {
+        "matchLocation": "/",
         "location": "/",
         "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
       },
       {
+        "matchLocation": "/static",
         "location": "/static",
         "root": "D:\\webserver",
         "index": "a.html"
+      },
+      {
+        "matchLocation": "/ranklist.php",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "/[rR][aA][nN][kK][lL][iI][sS][tT].php",
+        "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
       }
     ]
   }
