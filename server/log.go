@@ -7,15 +7,7 @@ import (
 
 func getAccessLog(sta Request, responseText string) string {
 	s := sta.Method + " " + sta.Url + " " + sta.Version + "\n"
-	s1 := []byte(responseText)
-	s2 := make([]byte, 0)
-	for i := 0; i < len(s1); i++ {
-		if s1[i] == '\r' {
-			break
-		}
-		s2 = append(s2, s1[i])
-	}
-	s += string(s2) + "\n"
+	s += GetFirstLine(responseText)
 	s += "User-Agent: "
 	for i := 0; i < len(sta.Headers["User-Agent"]); i++ {
 		if i != 0 {

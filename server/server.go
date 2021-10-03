@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 )
 
 var ErrorLogLocation string
@@ -55,21 +54,6 @@ func (s *Server) SentResponse(responseText string, conn net.Conn) {
 	}
 }
 
-func CheckStatic(Url string, Location string) bool {
-	var flag = false
-	SplitString := strings.Split(Url, "/")
-	for _, i := range SplitString {
-		if i == "static" {
-			flag = true
-			break
-		}
-	}
-	if flag == true && Location == "/static" {
-		return true
-	}
-	return false
-}
-
 func (s *Server) matchURL(conn net.Conn) {
 	defer conn.Close()
 	sta, err := Analyse(conn)
@@ -89,6 +73,9 @@ func (s *Server) matchURL(conn net.Conn) {
 			sta = Modify(sta, v)
 			statext := Http2String(sta)
 			responseText := s.SentMessage(statext, v)
+			if CheckNot200(responseText) {
+				AddErrorLog(ErrorLogLocation, fmt.Errorf(GetFirstLine(responseText)))
+			}
 			s.SentResponse(responseText, conn)
 			AddAccessLog(sta, s.config.AccessLog, responseText)
 		}

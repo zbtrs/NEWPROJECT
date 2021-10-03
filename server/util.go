@@ -117,3 +117,42 @@ func GetResponse(s []byte) string {
 	responseText += string(s)
 	return responseText
 }
+
+func CheckStatic(Url string, Location string) bool {
+	var flag = false
+	SplitString := strings.Split(Url, "/")
+	for _, i := range SplitString {
+		if i == "static" {
+			flag = true
+			break
+		}
+	}
+	if flag == true && Location == "/static" {
+		return true
+	}
+	return false
+}
+
+func CheckNot200(text string) bool {
+	s1 := []byte(text)
+	var flag = true
+	for i := 0; i < len(s1)-1; i++ {
+		if s1[i] == 'O' && s1[i+1] == 'K' {
+			flag = false
+			break
+		}
+	}
+	return flag
+}
+
+func GetFirstLine(text string) string {
+	s1 := []byte(text)
+	s2 := make([]byte, 0)
+	for i := 0; i < len(s1); i++ {
+		if s1[i] == '\r' {
+			break
+		}
+		s2 = append(s2, s1[i])
+	}
+	return string(s2) + "\n"
+}
