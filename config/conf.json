@@ -2,10 +2,12 @@
   {
     "port": "8080",
     "server_name": "localhost1",
+    "error_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\error_log.log",
+    "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
     "rules": [
       {
         "location": "/",
-        "Host": "60.205.178.117",
+        "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
       },
       {
@@ -18,10 +20,12 @@
   {
     "port": "80",
     "server_name": "localhost2",
+    "error_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\error_log.log",
+    "access_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\access_log.log",
     "rules": [
       {
         "location": "/",
-        "Host": "60.205.178.117",
+        "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
       },
       {

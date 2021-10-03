@@ -6,15 +6,17 @@ import (
 )
 
 type Rule struct {
-	Location  string `json:"location"`
-	Host      string `json:"Host"`
-	ProxyPass string `json:"proxy_pass"`
-	Root      string `json:"root"`
-	Index     string `json:"index"`
+	Location       string `json:"location"`
+	ProxySetHeader string `json:"proxy_set_header"`
+	ProxyPass      string `json:"proxy_pass"`
+	Root           string `json:"root"`
+	Index          string `json:"index"`
 }
 type JsonConf struct {
 	Port       string `json:"port"`
 	ServerName string `json:"server_name"`
+	ErrorLog   string `json:"error_log"`
+	AccessLog  string `json:"access_log"`
 	Rules      []Rule `json:"rules"`
 }
 

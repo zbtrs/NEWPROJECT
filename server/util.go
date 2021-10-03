@@ -52,6 +52,7 @@ func Analyse(conn net.Conn) (Request, error) {
 	}
 	_, err := scanner.Read(request.Body)
 	if err != nil {
+		AddErrorLog(ErrorLogLocation, err)
 		fmt.Println("httpparse error", err)
 		return Request{}, err
 	}
@@ -59,9 +60,10 @@ func Analyse(conn net.Conn) (Request, error) {
 }
 
 func Modify(sta Request, r config.Rule) Request {
+	var s = strings.Split(r.ProxySetHeader, ":")
 	a := make([]string, 0)
-	a = append(a, r.Host)
-	sta.Headers["Host"] = a
+	a = append(a, s[1])
+	sta.Headers[s[0]] = a
 	return sta
 }
 
@@ -108,7 +110,7 @@ func GetResponse(s []byte) string {
 
 	responseText := "HTTP/1.1 200 OK\r\n"
 	//responseText += "Content-Type: text/html; charset=UTF-8\r\n"
-	responseText += "text/html;application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
+	//responseText += "text/html;application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
 	responseText += "Connection: keep-alive\r\n"
 	//responseText += "Content-Encoding: gzip\r\n"
 	responseText += "\r\n"
