@@ -3,11 +3,15 @@ package server
 import (
 	"NETWORKPROJECT/config"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
+	"time"
 )
 
 var ErrorLogLocation string
+var ch1, ch2, ch3 = make(chan net.Conn), make(chan net.Conn), make(chan net.Conn)
+var cnt int = 0
 
 type Server struct {
 	config config.JsonConf
@@ -20,7 +24,7 @@ func NewServer(conf config.JsonConf) Server {
 }
 
 func (s *Server) SentMessage(text string, r config.Rule) string {
-	conn, err := net.Dial("tcp", r.ProxyPass) //TODO 改为配置中的地址
+	conn, err := net.Dial("tcp", r.ProxyPass)
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
 		fmt.Println("Dial err:", err)
@@ -138,6 +142,75 @@ func (s *Server) matchURL(conn net.Conn) {
 	}
 }
 
+func (s *Server) Thread1() {
+	for {
+		conn := <-ch1
+		s.matchURL(conn)
+	}
+}
+
+func (s *Server) Thread2() {
+	for {
+		conn := <-ch2
+		s.matchURL(conn)
+	}
+}
+
+func (s *Server) Thread3() {
+	for {
+		conn := <-ch3
+		s.matchURL(conn)
+	}
+}
+
+func (s *Server) MatchThread(x int, conn net.Conn) {
+	if x == 0 {
+		ch1 <- conn
+	}
+	if x == 1 {
+		ch2 <- conn
+	}
+	if x == 3 {
+		ch3 <- conn
+	}
+}
+
+func (s *Server) RandomLoad(conn net.Conn) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	x := r.Intn(10000) % 3
+	s.MatchThread(x, conn)
+}
+
+func (s *Server) PollingLoad(conn net.Conn) {
+	cnt++
+	if cnt == 3 {
+		cnt = 0
+	}
+	s.MatchThread(cnt, conn)
+}
+
+func (s *Server) WeightedRandomLoad(conn net.Conn) {
+	var l = []int{0, 0, 0, 0, 1, 1, 2}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	x := r.Intn(10000) % 7
+	s.MatchThread(l[x], conn)
+}
+
+func (s *Server) LoadBalance(conn net.Conn) {
+	go s.Thread1()
+	go s.Thread2()
+	go s.Thread3()
+	if s.config.LoadBalanceMethod == "randomload" {
+		s.RandomLoad(conn)
+	}
+	if s.config.LoadBalanceMethod == "pollingload" {
+		s.PollingLoad(conn)
+	}
+	if s.config.LoadBalanceMethod == "weightedrandomload" {
+		s.WeightedRandomLoad(conn)
+	}
+}
+
 func (s *Server) Solve() {
 	ErrorLogLocation = s.config.ErrorLog
 	Sta, err := net.Listen("tcp", ":"+s.config.Port)
@@ -154,6 +227,7 @@ func (s *Server) Solve() {
 			fmt.Println("Accept error: ", err)
 			return
 		}
-		go s.matchURL(conn)
+		s.LoadBalance(conn)
+		//go s.matchURL(conn)
 	}
 }

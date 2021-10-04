@@ -4,6 +4,7 @@
     "server_name": "localhost1",
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
+    "loadBalanceMethod": "weightedrandomload",
     "rules": [
       {
         "matchLocation": "/",
@@ -48,6 +49,7 @@
     "server_name": "localhost2",
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\access_log.log",
+    "loadBalanceMethod": "randomload",
     "rules": [
       {
         "matchLocation": "/",

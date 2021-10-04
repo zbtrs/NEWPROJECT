@@ -14,11 +14,12 @@ type Rule struct {
 	Index          string `json:"index"`
 }
 type JsonConf struct {
-	Port       string `json:"port"`
-	ServerName string `json:"server_name"`
-	ErrorLog   string `json:"error_log"`
-	AccessLog  string `json:"access_log"`
-	Rules      []Rule `json:"rules"`
+	Port              string `json:"port"`
+	ServerName        string `json:"server_name"`
+	ErrorLog          string `json:"error_log"`
+	AccessLog         string `json:"access_log"`
+	LoadBalanceMethod string `json:"loadBalanceMethod"`
+	Rules             []Rule `json:"rules"`
 }
 
 func Solve() ([]JsonConf, error) {
