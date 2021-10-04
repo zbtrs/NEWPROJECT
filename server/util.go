@@ -69,6 +69,14 @@ func Modify(sta Request, r config.Rule) Request {
 	return sta
 }
 
+func Modify2(sta Request, r config.Rule) Request {
+	var s = strings.Split(r.ProxySetHeader, ":")
+	a := make([]string, 0)
+	a = append(a, s[1])
+	sta.Headers[s[0]] = a
+	return sta
+}
+
 func Http2String(sta Request) string {
 	var res string = ""
 	res += sta.Method + " " + sta.Url + " " + sta.Version + "\r\n"

@@ -41,6 +41,12 @@
         "location": "/ranklist.php",
         "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "none",
+        "location": "none",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
       }
     ]
   },
@@ -72,6 +78,12 @@
       {
         "matchLocation": "/[rR][aA][nN][kK][lL][iI][sS][tT].php",
         "location": "/ranklist.php",
+        "proxy_set_header": "Host:60.205.178.117",
+        "proxy_pass": "60.205.178.117:80"
+      },
+      {
+        "matchLocation": "none",
+        "location": "none",
         "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
       }

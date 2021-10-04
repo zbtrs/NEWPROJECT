@@ -77,6 +77,17 @@ func (s *Server) LinkSolve(sta Request, conn net.Conn, v config.Rule) {
 	AddAccessLog(sta, s.config.AccessLog, responseText)
 }
 
+func (s *Server) RequestOthers(sta Request, conn net.Conn, v config.Rule) {
+	sta = Modify2(sta, v)
+	statext := Http2String(sta)
+	responseText := s.SentMessage(statext, v)
+	if CheckNot200(responseText) {
+		AddErrorLog(ErrorLogLocation, fmt.Errorf(GetFirstLine(responseText)))
+	}
+	s.SentResponse(responseText, conn)
+	AddAccessLog(sta, s.config.AccessLog, responseText)
+}
+
 func (s *Server) matchURL(conn net.Conn) {
 	defer conn.Close()
 	sta, err := Analyse(conn)
@@ -136,8 +147,7 @@ func (s *Server) matchURL(conn net.Conn) {
 		}
 	}
 	if flag == false {
-		Response404(conn)
-		AddErrorLog(ErrorLogLocation, fmt.Errorf("Can't March URL"))
+		s.RequestOthers(sta, conn, s.config.Rules[len(s.config.Rules)-1])
 		return
 	}
 }
