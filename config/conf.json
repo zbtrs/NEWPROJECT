@@ -5,7 +5,7 @@
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
     "loadBalanceMethod": "randomload",
-    "isLoadBalance": "false",
+    "isLoadBalance": "true",
     "rules": [
       {
         "matchLocation": "/",

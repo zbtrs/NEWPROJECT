@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	conf, err := config.Solve()
+	conf, err := config.Solve() //读取配置文件
 	if err != nil {
 		fmt.Println("json error!", err)
 	}

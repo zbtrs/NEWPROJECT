@@ -65,6 +65,10 @@ func Modify(sta Request, r config.Rule) Request {
 	a := make([]string, 0)
 	a = append(a, s[1])
 	sta.Headers[s[0]] = a
+	a = make([]string, 0)
+	a = append(a, "close")
+	sta.Headers["Connection"] = a
+	//sta.Method = "HTTP/1.0"
 	sta.Url = r.Location
 	return sta
 }

@@ -217,25 +217,26 @@ func (s *Server) MatchThread(x int, conn net.Conn) {
 
 func (s *Server) RandomLoad(conn net.Conn) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	x := r.Intn(10000) % 2
+	x := r.Intn(10000) % 3
 	s.MatchThread(x, conn)
 }
+
 func (s *Server) PollingLoad(conn net.Conn) {
 	cnt++
-	if cnt == 2 {
+	if cnt == 3 {
 		cnt = 0
 	}
 	s.MatchThread(cnt, conn)
 }
 
 func (s *Server) WeightedRandomLoad(conn net.Conn) {
-	var l = []int{0, 0, 0, 0, 1, 1}
+	var l = []int{0, 0, 0, 0, 1, 1, 2}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	x := r.Intn(10000) % 6
+	x := r.Intn(10000) % 7
 	s.MatchThread(l[x], conn)
 }
 
-func (s *Server) LoadBalance(conn net.Conn, cnt *sync.WaitGroup) {
+func (s *Server) LoadBalance(conn net.Conn, cnt *sync.WaitGroup) { //选择什么策略
 	defer cnt.Done()
 	if s.config.LoadBalanceMethod == "randomload" {
 		s.RandomLoad(conn)
@@ -249,9 +250,9 @@ func (s *Server) LoadBalance(conn net.Conn, cnt *sync.WaitGroup) {
 }
 
 func (s *Server) Solve(cnt *sync.WaitGroup) {
-	defer cnt.Done()
+	defer cnt.Done() //每一个goroutine都要确保计数器-1
 	ErrorLogLocation = s.config.ErrorLog
-	Sta, err := net.Listen("tcp", ":"+s.config.Port)
+	Sta, err := net.Listen("tcp", ":"+s.config.Port) //监听
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
 		fmt.Println("listen error!", err)
@@ -266,7 +267,7 @@ func (s *Server) Solve(cnt *sync.WaitGroup) {
 			return
 		}
 		//s.LoadBalance(conn)
-		if s.config.IsLoadBalance == "false" {
+		if s.config.IsLoadBalance == "false" { //是否负载均衡
 			cnt.Add(1)
 			go s.matchURL(conn, cnt)
 		} else {
