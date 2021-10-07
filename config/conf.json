@@ -4,19 +4,14 @@
     "server_name": "localhost1",
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
-    "loadBalanceMethod": "weightedrandomload",
+    "loadBalanceMethod": "randomload",
+    "isLoadBalance": "false",
     "rules": [
       {
         "matchLocation": "/",
         "location": "/",
         "proxy_set_header": "Host:60.205.178.117",
         "proxy_pass": "60.205.178.117:80"
-      },
-      {
-        "matchLocation": "/static",
-        "location": "/static",
-        "root": "D:\\webserver",
-        "index": "a.html"
       },
       {
         "matchLocation": "/ranklist.php",
@@ -43,6 +38,12 @@
         "proxy_pass": "60.205.178.117:80"
       },
       {
+        "matchLocation": "/static",
+        "location": "/static",
+        "root": "D:\\webserver",
+        "index": "a.html"
+      },
+      {
         "matchLocation": "none",
         "location": "none",
         "proxy_set_header": "Host:60.205.178.117",
@@ -51,17 +52,30 @@
     ]
   },
   {
-    "port": "80",
+    "port": "8081",
     "server_name": "localhost2",
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost2\\access_log.log",
     "loadBalanceMethod": "randomload",
+    "isLoadBalance": "false",
     "rules": [
       {
         "matchLocation": "/",
         "location": "/",
-        "proxy_set_header": "Host:60.205.178.117",
-        "proxy_pass": "60.205.178.117:80"
+        "proxy_set_header": "Host:47.98.207.121",
+        "proxy_pass": "47.98.207.121:80"
+      },
+      {
+        "matchLocation": "/ranking",
+        "location": "/ranking",
+        "proxy_set_header": "Host:47.98.207.121",
+        "proxy_pass": "47.98.207.121:80"
+      },
+      {
+        "matchLocation": "/[rR][aA][nN][kK][iI][nN][gG]",
+        "location": "/ranking",
+        "proxy_set_header": "Host:47.98.207.121",
+        "proxy_pass": "47.98.207.121:80"
       },
       {
         "matchLocation": "/static",
@@ -70,22 +84,10 @@
         "index": "a.html"
       },
       {
-        "matchLocation": "/ranklist.php",
-        "location": "/ranklist.php",
-        "proxy_set_header": "Host:60.205.178.117",
-        "proxy_pass": "60.205.178.117:80"
-      },
-      {
-        "matchLocation": "/[rR][aA][nN][kK][lL][iI][sS][tT].php",
-        "location": "/ranklist.php",
-        "proxy_set_header": "Host:60.205.178.117",
-        "proxy_pass": "60.205.178.117:80"
-      },
-      {
         "matchLocation": "none",
         "location": "none",
-        "proxy_set_header": "Host:60.205.178.117",
-        "proxy_pass": "60.205.178.117:80"
+        "proxy_set_header": "Host:47.98.207.121",
+        "proxy_pass": "47.98.207.121:80"
       }
     ]
   }

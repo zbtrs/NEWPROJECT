@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -50,6 +51,7 @@ func (s *Server) SentMessage(text string, r config.Rule) string {
 }
 
 func (s *Server) SentResponse(responseText string, conn net.Conn) {
+	//fmt.Println(responseText)
 	_, err := conn.Write([]byte(responseText))
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
@@ -88,8 +90,9 @@ func (s *Server) RequestOthers(sta Request, conn net.Conn, v config.Rule) {
 	AddAccessLog(sta, s.config.AccessLog, responseText)
 }
 
-func (s *Server) matchURL(conn net.Conn) {
+func (s *Server) matchURL(conn net.Conn, cnt *sync.WaitGroup) {
 	defer conn.Close()
+	defer cnt.Done()
 	sta, err := Analyse(conn)
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
@@ -106,7 +109,7 @@ func (s *Server) matchURL(conn net.Conn) {
 			s.SentResponse(responseText2, conn)
 			flag = true
 			break
-		} else if sta.Url == v.MatchLocation { //TODO other match rules
+		} else if sta.Url == v.MatchLocation {
 			s.LinkSolve(sta, conn, v)
 			flag = true
 			break
@@ -152,6 +155,7 @@ func (s *Server) matchURL(conn net.Conn) {
 	}
 }
 
+/*
 func (s *Server) Thread1() {
 	for {
 		conn := <-ch1
@@ -185,27 +189,6 @@ func (s *Server) MatchThread(x int, conn net.Conn) {
 	}
 }
 
-func (s *Server) RandomLoad(conn net.Conn) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	x := r.Intn(10000) % 3
-	s.MatchThread(x, conn)
-}
-
-func (s *Server) PollingLoad(conn net.Conn) {
-	cnt++
-	if cnt == 3 {
-		cnt = 0
-	}
-	s.MatchThread(cnt, conn)
-}
-
-func (s *Server) WeightedRandomLoad(conn net.Conn) {
-	var l = []int{0, 0, 0, 0, 1, 1, 2}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	x := r.Intn(10000) % 7
-	s.MatchThread(l[x], conn)
-}
-
 func (s *Server) LoadBalance(conn net.Conn) {
 	go s.Thread1()
 	go s.Thread2()
@@ -220,8 +203,53 @@ func (s *Server) LoadBalance(conn net.Conn) {
 		s.WeightedRandomLoad(conn)
 	}
 }
+*/
 
-func (s *Server) Solve() {
+func (s *Server) MatchThread(x int, conn net.Conn) {
+	sta, err := Analyse(conn)
+	if err != nil {
+		AddErrorLog(ErrorLogLocation, err)
+		fmt.Println("Analyse err: ", err)
+		return
+	}
+	s.LinkSolve(sta, conn, s.config.Rules[x])
+}
+
+func (s *Server) RandomLoad(conn net.Conn) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	x := r.Intn(10000) % 2
+	s.MatchThread(x, conn)
+}
+func (s *Server) PollingLoad(conn net.Conn) {
+	cnt++
+	if cnt == 2 {
+		cnt = 0
+	}
+	s.MatchThread(cnt, conn)
+}
+
+func (s *Server) WeightedRandomLoad(conn net.Conn) {
+	var l = []int{0, 0, 0, 0, 1, 1}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	x := r.Intn(10000) % 6
+	s.MatchThread(l[x], conn)
+}
+
+func (s *Server) LoadBalance(conn net.Conn, cnt *sync.WaitGroup) {
+	defer cnt.Done()
+	if s.config.LoadBalanceMethod == "randomload" {
+		s.RandomLoad(conn)
+	}
+	if s.config.LoadBalanceMethod == "pollingload" {
+		s.PollingLoad(conn)
+	}
+	if s.config.LoadBalanceMethod == "weightedrandomload" {
+		s.WeightedRandomLoad(conn)
+	}
+}
+
+func (s *Server) Solve(cnt *sync.WaitGroup) {
+	defer cnt.Done()
 	ErrorLogLocation = s.config.ErrorLog
 	Sta, err := net.Listen("tcp", ":"+s.config.Port)
 	if err != nil {
@@ -237,7 +265,13 @@ func (s *Server) Solve() {
 			fmt.Println("Accept error: ", err)
 			return
 		}
-		s.LoadBalance(conn)
-		//go s.matchURL(conn)
+		//s.LoadBalance(conn)
+		if s.config.IsLoadBalance == "false" {
+			cnt.Add(1)
+			go s.matchURL(conn, cnt)
+		} else {
+			cnt.Add(1)
+			go s.LoadBalance(conn, cnt)
+		}
 	}
 }

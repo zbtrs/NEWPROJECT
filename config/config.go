@@ -6,25 +6,26 @@ import (
 )
 
 type Rule struct {
-	Location       string `json:"location"`
-	MatchLocation  string `json:"matchLocation"`
-	ProxySetHeader string `json:"proxy_set_header"`
-	ProxyPass      string `json:"proxy_pass"`
 	Root           string `json:"root"`
 	Index          string `json:"index"`
+	Location       string `json:"location"`
+	ProxyPass      string `json:"proxy_pass"`
+	MatchLocation  string `json:"matchLocation"`
+	ProxySetHeader string `json:"proxy_set_header"`
 }
 type JsonConf struct {
 	Port              string `json:"port"`
-	ServerName        string `json:"server_name"`
 	ErrorLog          string `json:"error_log"`
 	AccessLog         string `json:"access_log"`
+	ServerName        string `json:"server_name"`
+	IsLoadBalance     string `json:"isLoadBalance"`
 	LoadBalanceMethod string `json:"loadBalanceMethod"`
 	Rules             []Rule `json:"rules"`
 }
 
 func Solve() ([]JsonConf, error) {
-	var Res = make([]JsonConf, 5)                                             //TODO 重构
-	fileData, err := ioutil.ReadFile("D:\\NETWORKPROJECT\\config\\conf.json") // TODO cmd flag
+	var Res = make([]JsonConf, 5)
+	fileData, err := ioutil.ReadFile("D:\\NETWORKPROJECT\\config\\conf.json")
 	if err != nil {
 		return []JsonConf{}, err
 	}
