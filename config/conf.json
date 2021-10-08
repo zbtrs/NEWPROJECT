@@ -5,7 +5,7 @@
     "error_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\error_log.log",
     "access_log": "D:\\NETWORKPROJECT\\Log\\localhost1\\access_log.log",
     "loadBalanceMethod": "randomload",
-    "isLoadBalance": "true",
+    "isLoadBalance": "false",
     "rules": [
       {
         "matchLocation": "/",
@@ -41,7 +41,7 @@
         "matchLocation": "/static",
         "location": "/static",
         "root": "D:\\webserver",
-        "index": "a.html"
+        "index": "bingyan.jpg"
       },
       {
         "matchLocation": "none",

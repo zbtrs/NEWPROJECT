@@ -24,7 +24,7 @@ type JsonConf struct {
 }
 
 func Solve() ([]JsonConf, error) {
-	var Res = make([]JsonConf, 5)
+	var Res = make([]JsonConf, 2)
 	fileData, err := ioutil.ReadFile("D:\\NETWORKPROJECT\\config\\conf.json")
 	if err != nil {
 		return []JsonConf{}, err

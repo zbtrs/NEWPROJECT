@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func getAccessLog(sta Request, responseText string) string {
+func getAccessLog(sta Request, responseText string) string { //生成输出的string
 	s := sta.Method + " " + sta.Url + " " + sta.Version + "\n"
 	s += GetFirstLine(responseText)
 	s += "User-Agent: "

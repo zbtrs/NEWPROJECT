@@ -20,14 +20,14 @@ type Request struct {
 	Contents string
 }
 
-func Analyse(conn net.Conn) (Request, error) {
+func Analyse(conn net.Conn) (Request, error) { //提取报文各成分
 	scanner := bufio.NewReader(conn)
 	request := new(Request)
 	request.Body = make([]byte, 0)
 	request.Headers = make(headers)
 	request.Contents = ""
 
-	textt, _, _ := scanner.ReadLine()
+	textt, _, _ := scanner.ReadLine() //单独处理第一行
 	text := string(textt)
 	Linetext := strings.Split(text, " ")
 	if len(Linetext) != 3 {
@@ -42,13 +42,13 @@ func Analyse(conn net.Conn) (Request, error) {
 		text := string(textt)
 		request.Contents += text + "\r\n"
 		if text != "" {
-			Linetext := strings.Split(text, ": ")
+			Linetext := strings.Split(text, ": ") //记录header
 			A := Linetext[0]
 			B := Linetext[1]
 			C := strings.Split(B, ", ")
 			request.Headers[A] = append(request.Headers[A], C...)
 		} else {
-			break
+			break //读到空行了
 		}
 	}
 	_, err := scanner.Read(request.Body)
@@ -60,15 +60,14 @@ func Analyse(conn net.Conn) (Request, error) {
 	return *request, nil
 }
 
-func Modify(sta Request, r config.Rule) Request {
+func Modify(sta Request, r config.Rule) Request { //根据配置文件修改报文
 	var s = strings.Split(r.ProxySetHeader, ":")
 	a := make([]string, 0)
 	a = append(a, s[1])
 	sta.Headers[s[0]] = a
 	a = make([]string, 0)
-	a = append(a, "close")
+	a = append(a, "close") //如果是keep-alive会出现问题
 	sta.Headers["Connection"] = a
-	//sta.Method = "HTTP/1.0"
 	sta.Url = r.Location
 	return sta
 }
@@ -81,7 +80,7 @@ func Modify2(sta Request, r config.Rule) Request {
 	return sta
 }
 
-func Http2String(sta Request) string {
+func Http2String(sta Request) string { //将报文变成string,一行行处理
 	var res string = ""
 	res += sta.Method + " " + sta.Url + " " + sta.Version + "\r\n"
 	for A, B := range sta.Headers {
@@ -98,7 +97,7 @@ func Http2String(sta Request) string {
 	return res
 }
 
-func GetStatic(sta Request, r config.Rule) string {
+func GetStatic(sta Request, r config.Rule) string { //得到静态文件位置
 	SplitString := strings.Split(sta.Url, "/")
 	StaticString := ""
 	pos := 0
@@ -120,19 +119,15 @@ func GetStatic(sta Request, r config.Rule) string {
 	//否则就是要拼接路径
 }
 
-func GetResponse(s []byte) string {
-
+func GetResponse(s []byte) string { //手动构建回复报文
 	responseText := "HTTP/1.1 200 OK\r\n"
-	//responseText += "Content-Type: text/html; charset=UTF-8\r\n"
-	//responseText += "text/html;application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
-	responseText += "Connection: keep-alive\r\n"
-	//responseText += "Content-Encoding: gzip\r\n"
+	responseText += "Connection: close\r\n"
 	responseText += "\r\n"
 	responseText += string(s)
 	return responseText
 }
 
-func CheckStatic(Url string, Location string) bool {
+func CheckStatic(Url string, Location string) bool { //检查是否是静态文件服务
 	var flag = false
 	SplitString := strings.Split(Url, "/")
 	for _, i := range SplitString {
@@ -147,7 +142,7 @@ func CheckStatic(Url string, Location string) bool {
 	return false
 }
 
-func CheckNot200(text string) bool {
+func CheckNot200(text string) bool { //状态是否正常
 	s1 := []byte(text)
 	var flag = true
 	for i := 0; i < len(s1)-1; i++ {
@@ -159,7 +154,7 @@ func CheckNot200(text string) bool {
 	return flag
 }
 
-func GetFirstLine(text string) string {
+func GetFirstLine(text string) string { //得到string的第一行,以便提取信息
 	s1 := []byte(text)
 	s2 := make([]byte, 0)
 	for i := 0; i < len(s1); i++ {
@@ -171,7 +166,7 @@ func GetFirstLine(text string) string {
 	return string(s2) + "\n"
 }
 
-func MarchLeft(s1 string, s2 string) bool {
+func MarchLeft(s1 string, s2 string) bool { //是否左匹配
 	b1, b2 := []byte(s1), []byte(s2)
 	if len(b2) == 0 || b2[0] != '*' || len(b1) < len(b2)-1 {
 		return false
@@ -203,11 +198,10 @@ func MarchRight(s1 string, s2 string) bool {
 	return true
 }
 
-func MarchRE(s1 string, s2 string) bool {
+func MarchRE(s1 string, s2 string) bool { //是否是正则匹配
 	if s2 == "/" {
 		return false
 	} //特殊符号问题,根本不可能用到正则匹配
-	//fmt.Println("MarchRe ",s1,s2)
 	flag, _ := regexp.MatchString(s2, s1)
 	return flag
 }

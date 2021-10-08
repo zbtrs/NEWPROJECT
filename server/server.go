@@ -11,7 +11,6 @@ import (
 )
 
 var ErrorLogLocation string
-var ch1, ch2, ch3 = make(chan net.Conn), make(chan net.Conn), make(chan net.Conn)
 var cnt int = 0
 
 type Server struct {
@@ -25,22 +24,22 @@ func NewServer(conf config.JsonConf) Server {
 }
 
 func (s *Server) SentMessage(text string, r config.Rule) string {
-	conn, err := net.Dial("tcp", r.ProxyPass)
+	conn, err := net.Dial("tcp", r.ProxyPass) //建立TCP连接
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
 		fmt.Println("Dial err:", err)
 		return ""
 	}
 	defer conn.Close()
-	_, err = conn.Write([]byte(text))
+	_, err = conn.Write([]byte(text)) //发送信息
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
 		fmt.Println("SentMessage error:", err)
 		return ""
 	}
-	buf := make([]byte, 100010)
+	buf := make([]byte, 100010) //读取报文,不能用ioutil.ReadAll
 	n, err := conn.Read(buf[:])
-	n1, _ := conn.Read(buf[n:])
+	n1, _ := conn.Read(buf[n:]) //一次可能读不完
 	n += n1
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
@@ -51,7 +50,6 @@ func (s *Server) SentMessage(text string, r config.Rule) string {
 }
 
 func (s *Server) SentResponse(responseText string, conn net.Conn) {
-	//fmt.Println(responseText)
 	_, err := conn.Write([]byte(responseText))
 	if err != nil {
 		AddErrorLog(ErrorLogLocation, err)
@@ -61,22 +59,20 @@ func (s *Server) SentResponse(responseText string, conn net.Conn) {
 }
 
 func Response404(conn net.Conn) {
-	//fmt.Println("check404")
 	s := "HTTP/1.1 404 Not Found\r\n"
 	s += "\r\n"
 	_, _ = conn.Write([]byte(s))
 }
 
 func (s *Server) LinkSolve(sta Request, conn net.Conn, v config.Rule) {
-	//fmt.Println("LinkCheck",v.MatchLocation,v.Location)
-	sta = Modify(sta, v)
-	statext := Http2String(sta)
-	responseText := s.SentMessage(statext, v)
-	if CheckNot200(responseText) {
+	sta = Modify(sta, v)                      //根据配置文件更改报文
+	statext := Http2String(sta)               //将报文变成string类型便于发送
+	responseText := s.SentMessage(statext, v) //得到回复报文
+	if CheckNot200(responseText) {            //如果状态不是正常的,输出到错误日志中
 		AddErrorLog(ErrorLogLocation, fmt.Errorf(GetFirstLine(responseText)))
 	}
-	s.SentResponse(responseText, conn)
-	AddAccessLog(sta, s.config.AccessLog, responseText)
+	s.SentResponse(responseText, conn)                  //发送报文
+	AddAccessLog(sta, s.config.AccessLog, responseText) //添加到连接日志中
 }
 
 func (s *Server) RequestOthers(sta Request, conn net.Conn, v config.Rule) {
@@ -99,13 +95,12 @@ func (s *Server) matchURL(conn net.Conn, cnt *sync.WaitGroup) {
 		fmt.Println("Analyse err: ", err)
 		return
 	}
-	//fmt.Println("check ",sta.Url)
 	var flag bool = false //是否有匹配上
 	for _, v := range s.config.Rules {
 		if CheckStatic(sta.Url, v.MatchLocation) == true { //静态文件服务
-			tempText := GetStatic(sta, v)
-			responseText, _ := os.ReadFile(tempText)
-			responseText2 := GetResponse(responseText)
+			tempText := GetStatic(sta, v)              //要打开的文件位置
+			responseText, _ := os.ReadFile(tempText)   //打开文件,返回一个[]byte
+			responseText2 := GetResponse(responseText) //手动构建报文
 			s.SentResponse(responseText2, conn)
 			flag = true
 			break
@@ -115,7 +110,6 @@ func (s *Server) matchURL(conn net.Conn, cnt *sync.WaitGroup) {
 			break
 		}
 	}
-	//fmt.Println("check1 ",flag)
 	if flag {
 		return
 	}
@@ -126,19 +120,16 @@ func (s *Server) matchURL(conn net.Conn, cnt *sync.WaitGroup) {
 			break
 		}
 	}
-	//fmt.Println("check2 ",flag)
 	if flag {
 		return
 	}
 	for _, v := range s.config.Rules {
 		if MarchRight(sta.Url, v.MatchLocation) {
-			//fmt.Println("sb! ",sta.Url,v.MatchLocation,v.Location)
 			s.LinkSolve(sta, conn, v)
 			flag = true
 			break
 		}
 	}
-	//fmt.Println("check3 ",flag)
 	if flag {
 		return
 	}
@@ -154,56 +145,6 @@ func (s *Server) matchURL(conn net.Conn, cnt *sync.WaitGroup) {
 		return
 	}
 }
-
-/*
-func (s *Server) Thread1() {
-	for {
-		conn := <-ch1
-		s.matchURL(conn)
-	}
-}
-
-func (s *Server) Thread2() {
-	for {
-		conn := <-ch2
-		s.matchURL(conn)
-	}
-}
-
-func (s *Server) Thread3() {
-	for {
-		conn := <-ch3
-		s.matchURL(conn)
-	}
-}
-
-func (s *Server) MatchThread(x int, conn net.Conn) {
-	if x == 0 {
-		ch1 <- conn
-	}
-	if x == 1 {
-		ch2 <- conn
-	}
-	if x == 3 {
-		ch3 <- conn
-	}
-}
-
-func (s *Server) LoadBalance(conn net.Conn) {
-	go s.Thread1()
-	go s.Thread2()
-	go s.Thread3()
-	if s.config.LoadBalanceMethod == "randomload" {
-		s.RandomLoad(conn)
-	}
-	if s.config.LoadBalanceMethod == "pollingload" {
-		s.PollingLoad(conn)
-	}
-	if s.config.LoadBalanceMethod == "weightedrandomload" {
-		s.WeightedRandomLoad(conn)
-	}
-}
-*/
 
 func (s *Server) MatchThread(x int, conn net.Conn) {
 	sta, err := Analyse(conn)
@@ -266,7 +207,6 @@ func (s *Server) Solve(cnt *sync.WaitGroup) {
 			fmt.Println("Accept error: ", err)
 			return
 		}
-		//s.LoadBalance(conn)
 		if s.config.IsLoadBalance == "false" { //是否负载均衡
 			cnt.Add(1)
 			go s.matchURL(conn, cnt)
